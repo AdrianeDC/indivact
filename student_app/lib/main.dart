@@ -41,17 +41,34 @@ class _StudentListScreenState extends State<StudentListScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        appBar: AppBar(title: const Text('List Of Enrollees')),
-        body: FutureBuilder<List<Student>>(
-          future: students,
-          builder: (context, snapshot) {
-            if (snapshot.hasData) {
-              return ListView(
-                children: snapshot.data!
-                    .map((student) => ListTile(
-                          title:
-                              Text('${student.firstName} ${student.lastName}'),
-                          subtitle: Text(student.course),
+      appBar: AppBar(
+        title: const Text('Enrolled Students'),
+        centerTitle: true,
+      ),
+      body: FutureBuilder<List<Student>>(
+        future: students,
+        builder: (context, snapshot) {
+          if (snapshot.hasData) {
+            return ListView(
+              padding: const EdgeInsets.all(8.0),
+              children: snapshot.data!
+                  .map((student) => Card(
+                        elevation: 4,
+                        margin: const EdgeInsets.symmetric(vertical: 8.0),
+                        child: ListTile(
+                          contentPadding: const EdgeInsets.all(16.0),
+                          title: Text(
+                            '${student.firstName} ${student.lastName}',
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 18,
+                            ),
+                          ),
+                          subtitle: Text(
+                            student.course,
+                            style: const TextStyle(fontSize: 16),
+                          ),
+                          trailing: const Icon(Icons.arrow_forward),
                           onTap: () async {
                             await Navigator.push(
                               context,
@@ -64,26 +81,43 @@ class _StudentListScreenState extends State<StudentListScreen> {
                               students = apiService.getStudents();
                             });
                           },
-                        ))
-                    .toList(),
-              );
-            } else if (snapshot.hasError) {
-              return const Center(child: Text('No student records at the moment'));
-            }
-            return const Center(child: CircularProgressIndicator());
-          },
-        ),
-        floatingActionButton: FloatingActionButton(
-          onPressed: () async {
-            await Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => const StudentDetailScreen()),
+                        ),
+                      ))
+                  .toList(),
             );
-            setState(() {
-              students = apiService.getStudents();
-            });
-          },
-          child: const Icon(Icons.add),
-        ));
+          } else if (snapshot.hasError) {
+            return const Center(
+              child: Text('No student records at the moment'),
+            );
+          }
+          return const Center(child: CircularProgressIndicator());
+        },
+      ),
+      floatingActionButton: TextButton(
+  onPressed: () async {
+    await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const StudentDetailScreen()),
+    );
+    setState(() {
+      students = apiService.getStudents();
+    });
+  },
+  style: TextButton.styleFrom(
+    backgroundColor: Colors.purple, // Optional: set background color
+    padding: const EdgeInsets.symmetric(vertical: 16.0, horizontal: 32.0), // Adjust padding as needed
+    shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(8.0), // Optional: set rounded corners
+    ),
+  ),
+  child: const Text(
+    'Add New Record', // The new button text
+    style: TextStyle(
+      fontSize: 16,
+      color: Colors.white,
+    ),
+  ),
+),
+    );
   }
 }

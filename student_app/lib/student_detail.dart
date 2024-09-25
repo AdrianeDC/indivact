@@ -1,5 +1,4 @@
-// Updated student_detail.dart
-
+// student_detail.dart
 import 'package:flutter/material.dart';
 import 'models/student.dart';
 import 'services/api_service.dart';
@@ -10,7 +9,6 @@ class StudentDetailScreen extends StatefulWidget {
   const StudentDetailScreen({super.key, this.studentId});
 
   @override
-  // ignore: library_private_types_in_public_api
   _StudentDetailScreenState createState() => _StudentDetailScreenState();
 }
 
@@ -53,42 +51,63 @@ class _StudentDetailScreenState extends State<StudentDetailScreen> {
   }
 
   void saveStudent() async {
-  if (_formKey.currentState!.validate()) {
-    // Create a new Student instance with the provided data
-    Student newStudent = Student(
-      id: student?.id ?? '',
-      firstName: firstNameController.text,
-      lastName: lastNameController.text,
-      course: courseController.text,
-      year: year,
-      enrolled: enrolled,
+    if (_formKey.currentState!.validate()) {
+      Student newStudent = Student(
+        id: student?.id ?? '',
+        firstName: firstNameController.text,
+        lastName: lastNameController.text,
+        course: courseController.text,
+        year: year,
+        enrolled: enrolled,
+      );
+
+      try {
+        if (isEditing) {
+          await apiService.updateStudent(newStudent);
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Student updated successfully')),
+          );
+        } else {
+          await apiService.createStudent(newStudent);
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Student created successfully')),
+          );
+        }
+        Navigator.pop(context);
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to save student: $e')),
+        );
+      }
+    }
+  }
+
+  void deleteStudent() async {
+    final shouldDelete = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Delete Student'),
+        content: const Text('Are you sure you want to delete this student?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
     );
 
-    try {
-      // Attempt to save the student
-      if (isEditing) {
-        await apiService.updateStudent(newStudent);
-        print('Student updated: ${newStudent.toJson()}');
-      } else {
-        await apiService.createStudent(newStudent);
-        print('Student created: ${newStudent.toJson()}');
-      }
-      // Navigate back to the previous screen
-      Navigator.pop(context);
-    } catch (e) {
-      print('Error saving student: $e');
+    if (shouldDelete == true) {
+      await apiService.deleteStudent(student!.id);
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to save student: $e')),
+        SnackBar(content: Text('Student deleted successfully')),
       );
+      Navigator.pop(context);
     }
-  } else {
-    print('Form is not valid');
-  }
-}
-  void deleteStudent() async {
-    await apiService.deleteStudent(student!.id);
-    // ignore: use_build_context_synchronously
-    Navigator.pop(context);
   }
 
   @override
@@ -112,18 +131,15 @@ class _StudentDetailScreenState extends State<StudentDetailScreen> {
               key: _formKey,
               child: ListView(
                 children: <Widget>[
-                  // First Name
                   TextFormField(
                     controller: firstNameController,
                     decoration: const InputDecoration(
                       labelText: 'First Name',
                       border: OutlineInputBorder(),
                     ),
-                    validator: (value) =>
-                        value!.isEmpty ? 'Enter first name' : null,
+                    validator: (value) => value!.isEmpty ? 'Enter first name' : null,
                   ),
                   const SizedBox(height: 12),
-                  // Last Name
                   TextFormField(
                     controller: lastNameController,
                     decoration: const InputDecoration(
@@ -133,7 +149,6 @@ class _StudentDetailScreenState extends State<StudentDetailScreen> {
                     validator: (value) => value!.isEmpty ? 'Enter last name' : null,
                   ),
                   const SizedBox(height: 12),
-                  // Course
                   TextFormField(
                     controller: courseController,
                     decoration: const InputDecoration(
@@ -143,7 +158,6 @@ class _StudentDetailScreenState extends State<StudentDetailScreen> {
                     validator: (value) => value!.isEmpty ? 'Enter course' : null,
                   ),
                   const SizedBox(height: 12),
-                  // Year Dropdown
                   DropdownButtonFormField<String>(
                     value: year,
                     items: [
@@ -153,8 +167,7 @@ class _StudentDetailScreenState extends State<StudentDetailScreen> {
                       'Fourth Year',
                       'Fifth Year'
                     ]
-                        .map((label) =>
-                            DropdownMenuItem(value: label, child: Text(label)))
+                        .map((label) => DropdownMenuItem(value: label, child: Text(label)))
                         .toList(),
                     onChanged: (value) {
                       setState(() {
@@ -167,7 +180,6 @@ class _StudentDetailScreenState extends State<StudentDetailScreen> {
                     ),
                   ),
                   const SizedBox(height: 12),
-                  // Enrolled Switch
                   SwitchListTile(
                     title: const Text('Enrolled'),
                     value: enrolled,
@@ -177,17 +189,31 @@ class _StudentDetailScreenState extends State<StudentDetailScreen> {
                       });
                     },
                   ),
-                  // Save Button
+                  const SizedBox(height: 20), // Added spacing before buttons
                   ElevatedButton(
                     onPressed: saveStudent,
                     child: Text(isEditing ? 'Update' : 'Save'),
-                    style: ElevatedButton.styleFrom(backgroundColor: Colors.white),
+                    style: ElevatedButton.styleFrom(
+                      foregroundColor: Colors.white,
+                      backgroundColor: Colors.purple,
+                      padding: const EdgeInsets.symmetric(vertical: 16.0, horizontal: 32.0),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8.0), // Rounded corners
+                      ),
+                    ),
                   ),
-                  // Delete Button (only in edit mode)
+                  const SizedBox(height: 12),
                   if (isEditing)
                     ElevatedButton(
                       onPressed: deleteStudent,
-                      style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+                      style: ElevatedButton.styleFrom(
+                        foregroundColor: Colors.white,
+                        backgroundColor: Colors.red,
+                        padding: const EdgeInsets.symmetric(vertical: 16.0, horizontal: 32.0),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8.0), // Rounded corners
+                        ),
+                      ),
                       child: const Text('Delete'),
                     ),
                 ],
